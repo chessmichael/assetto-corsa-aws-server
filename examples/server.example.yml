@@ -10,6 +10,12 @@ admin_password: "change-me" # use /admin <pass> in chat
 track:
   id: ks_nordschleife
   layout: endurance         # "" if the track has no separate layouts
+  # AssettoServer needs each track's real-world location. It's auto-read from the
+  # track's geotags, so you usually set nothing here. But if a MOD track crashes
+  # the server with "No track params found", supply it:
+  # latitude: 39.54
+  # longitude: -122.35
+  # timezone: America/Los_Angeles   # optional; else estimated from longitude
 
 cars:
   - id: ks_porsche_911_gt3_r_2016

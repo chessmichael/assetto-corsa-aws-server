@@ -46,7 +46,9 @@ def ac_install(tmp_path: Path) -> Path:
     _write(tracks / "track_a" / "data" / "surfaces.ini", "[SURFACE_0]\nKEY=ROAD\n")
     _write(tracks / "track_a" / "models.ini", "[MODEL_0]\nFILE=track.kn5\n")
     _write(tracks / "track_a" / "map.png", b"\x89PNG\r\n")
-    _write(tracks / "track_a" / "ui" / "ui_track.json", json.dumps({"name": "Track A"}))
+    _write(tracks / "track_a" / "ui" / "ui_track.json",
+           json.dumps({"name": "Track A",
+                       "geotags": ["39° 32′ 23″ N", "122° 20′ 55″ W"]}))
     _write(tracks / "track_a" / "track.kn5", b"\x00" * 8192)       # mesh: excluded
     _write(tracks / "track_a" / "ai" / "fast_lane.ai", b"\x00" * 8192)  # AI: excluded
 

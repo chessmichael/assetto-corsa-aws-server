@@ -185,6 +185,30 @@ def render_entry_list(cfg: Dict) -> str:
     return "\n".join(L) + "\n"
 
 
+def estimate_timezone(longitude) -> str:
+    """A valid IANA tz roughly matching a longitude (sun timing). Users can
+    override with the real zone; this just keeps the default sensible."""
+    try:
+        off = round(float(longitude) / 15)
+    except (TypeError, ValueError):
+        return "Etc/UTC"
+    if off == 0:
+        return "Etc/UTC"
+    # Etc/GMT signs are inverted (Etc/GMT+8 == UTC-8).
+    return f"Etc/GMT{-off:+d}"
+
+
+def render_track_params(track_id: str, latitude, longitude, timezone,
+                        name: str = None) -> str:
+    """A data_track_params.ini section so AssettoServer's WeatherManager has the
+    track's location. Required for tracks not in its community database (mods)."""
+    return (f"[{track_id}]\n"
+            f"NAME={name or track_id}\n"
+            f"LATITUDE={latitude}\n"
+            f"LONGITUDE={longitude}\n"
+            f"TIMEZONE={timezone}\n")
+
+
 def validate(cfg: Dict) -> List[str]:
     """Return a list of human-readable problems (empty = OK)."""
     problems = []

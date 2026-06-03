@@ -99,6 +99,11 @@ def upload_files(region: str, bucket: str, items: List[Tuple[Path, str]],
             progress(i, len(items), key)
 
 
+def delete_object(region: str, bucket: str, key: str) -> None:
+    """Delete a single object (idempotent — no error if it's already gone)."""
+    session(region).client("s3").delete_object(Bucket=bucket, Key=key)
+
+
 def delete_prefix(region: str, bucket: str, prefix: str) -> int:
     """Delete all objects under a prefix. Returns count removed."""
     s3 = session(region).client("s3")

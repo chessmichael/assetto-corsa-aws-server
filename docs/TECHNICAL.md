@@ -187,7 +187,9 @@ backend: assettoserver|acserver
 password: str                 # join password ("" = public)
 admin_password: str           # /admin <pw> in chat
 register_to_lobby: bool       # default true; false = hidden (join by IP)
-track: { id: str, layout: str }   # layout "" if none
+track: { id, layout, latitude?, longitude?, timezone? }  # layout "" if none;
+  # coords auto-read from the track's geotags — override only for mod tracks that
+  # crash AssettoServer with "No track params found" (not in its location DB).
 cars:                         # the grid; one player slot per count
   - { id: str, count: int, skins: [str] }   # skins optional; cycled across slots
 sessions:
@@ -364,6 +366,11 @@ free credits. See README "Cost" for the operator-facing summary.
   a *stopped* instance still costs the EIP. See §9.
 - **`extra_cfg.yml`**: AssettoServer auto-creates it on first start; the sync
   excludes it so it's never deleted.
+- **Track params**: AssettoServer crashes with "No track params found" on tracks
+  not in its location database (many mods). `ac deploy` auto-supplies coords from
+  the track's geotags (or `track.latitude/longitude/timezone`) via a generated
+  `cfg/data_track_params.ini`; for in-DB tracks the file is cleared so the server
+  downloads its DB. Lookup key is the track folder id, not the layout.
 
 ## 14. Quick reference
 

@@ -128,6 +128,50 @@ def list_cars(install: Path) -> Dict[str, Dict]:
     return cars
 
 
+def _parse_geotag(s: str):
+    """Parse one geotag coordinate (decimal '39.54', or DMS '39° 32′ 23″ N')
+    into a signed decimal degree. Returns None if unparseable."""
+    s = str(s)
+    nums = [float(n) for n in re.findall(r"\d+(?:\.\d+)?", s)]
+    if not nums:
+        return None
+    if len(nums) >= 3:        # degrees, minutes, seconds
+        val = nums[0] + nums[1] / 60 + nums[2] / 3600
+    elif len(nums) == 2:      # degrees, decimal minutes
+        val = nums[0] + nums[1] / 60
+    else:                     # decimal degrees
+        val = nums[0]
+    if re.search(r"[SsWw]", s):  # south / west are negative
+        val = -abs(val)
+    return round(val, 5)
+
+
+def track_geotags(install: Path, track_id: str, layout: str = ""):
+    """(latitude, longitude) for a track from its ui_track.json geotags, or None.
+    AssettoServer needs a track's real-world location; many mods carry it here."""
+    base = install / "content" / "tracks" / track_id
+    candidates = []
+    if layout:
+        candidates.append(base / "ui" / layout / "ui_track.json")
+    candidates += [base / "ui" / "ui_track.json"]
+    # any layout's ui as a last resort (geotags are the same for the venue)
+    ui = base / "ui"
+    if ui.is_dir():
+        candidates += sorted(ui.glob("*/ui_track.json"))
+    for p in candidates:
+        if not p.is_file():
+            continue
+        try:
+            geo = json.loads(p.read_text(encoding="utf-8-sig")).get("geotags")
+        except (OSError, ValueError):
+            continue
+        if isinstance(geo, list) and len(geo) >= 2:
+            lat, lon = _parse_geotag(geo[0]), _parse_geotag(geo[1])
+            if lat is not None and lon is not None:
+                return (lat, lon)
+    return None
+
+
 def list_skins(install: Path, car_id: str) -> List[str]:
     """Available skin (livery / color) folder names for a car. These are the
     values you put in a car's `skins:` list in server.yml. Empty `skins:` lets

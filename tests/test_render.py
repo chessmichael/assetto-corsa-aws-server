@@ -126,6 +126,19 @@ def test_legacy_toplevel_keys_still_work(sample_cfg):
     assert "DAMAGE_MULTIPLIER=50" in render.render_server_cfg(sample_cfg)
 
 
+def test_render_track_params():
+    out = render.render_track_params("sometrack", 39.5, -122.3, "Etc/GMT+8")
+    assert "[sometrack]" in out
+    assert "LATITUDE=39.5" in out
+    assert "LONGITUDE=-122.3" in out
+    assert "TIMEZONE=Etc/GMT+8" in out
+
+
+def test_estimate_timezone():
+    assert render.estimate_timezone(-122) == "Etc/GMT+8"   # UTC-8
+    assert render.estimate_timezone(0) == "Etc/UTC"
+
+
 def test_content_refs(sample_cfg):
     cars, tracks = render.content_refs(sample_cfg)
     assert cars == ["car_a", "car_b"]

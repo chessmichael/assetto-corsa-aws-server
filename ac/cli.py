@@ -241,6 +241,26 @@ def cmd_deploy(args) -> None:
     awsio.put_text(region, bucket, "server/.backend",
                    cfg.get("backend", "assettoserver"))
 
+    # Track params (location for AssettoServer's WeatherManager). Auto-read from
+    # the track's geotags, or use track.latitude/longitude/timezone overrides.
+    # Tracks already in AssettoServer's DB need none — we clear the file so the
+    # server falls back to downloading its database.
+    track = cfg.get("track", {})
+    tid = track.get("id")
+    lat, lon = track.get("latitude"), track.get("longitude")
+    if tid and (lat is None or lon is None):
+        geo = content.track_geotags(install, tid, track.get("layout", ""))
+        if geo:
+            lat, lon = geo
+    params_key = "server/cfg/data_track_params.ini"
+    if tid and lat is not None and lon is not None:
+        tz = track.get("timezone") or render.estimate_timezone(lon)
+        awsio.put_text(region, bucket, params_key,
+                       render.render_track_params(tid, lat, lon, tz))
+        console.print(f"[dim]Track params for {tid}: {lat}, {lon}, {tz}[/dim]")
+    else:
+        awsio.delete_object(region, bucket, params_key)
+
     # 3. Tell the box (over SSM) to pull and restart.
     console.print("[bold]3/3 Restarting the server via SSM…[/bold]")
     if not remote.is_managed(region, instance_id):

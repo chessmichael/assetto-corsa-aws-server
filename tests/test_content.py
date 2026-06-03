@@ -61,6 +61,21 @@ def test_track_server_files_full_includes_everything(ac_install):
     assert "ai/fast_lane.ai" in rel
 
 
+def test_parse_geotag_formats():
+    assert abs(content._parse_geotag("39° 32′ 23″ N") - 39.5397) < 0.01
+    assert content._parse_geotag("122° 20′ 55″ W") < 0      # west = negative
+    assert content._parse_geotag("39.54") == 39.54
+    assert content._parse_geotag("nope") is None
+
+
+def test_track_geotags(ac_install):
+    lat, lon = content.track_geotags(ac_install, "track_a")
+    assert abs(lat - 39.5397) < 0.01
+    assert abs(lon + 122.3486) < 0.01                       # ~ -122.35
+    # a track with no geotags returns None
+    assert content.track_geotags(ac_install, "track_multi") is None
+
+
 def test_list_skins(ac_install):
     assert content.list_skins(ac_install, "car_a") == ["red"]
     assert content.list_skins(ac_install, "car_b") == []  # no skins folder
