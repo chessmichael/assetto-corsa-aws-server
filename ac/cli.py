@@ -292,8 +292,26 @@ def cmd_share(args) -> None:
 def cmd_start(args) -> None:
     st = state.load_state(_root())
     region, _, instance_id = _tf(st)
+    s = awsio.instance_state(region, instance_id)
+    if s == "running":
+        console.print("[green]Already running.[/green] Use `ac status` to check the server.")
+        return
+    if s == "pending":
+        console.print("[yellow]Already starting — give it a moment, then `ac status`.[/yellow]")
+        return
+    if s == "stopping":
+        console.print("[yellow]Still stopping. Wait until it's fully 'stopped', then "
+                      "`ac start` again.[/yellow]")
+        return
+    if s != "stopped":
+        console.print(f"[yellow]Instance is '{s}' — can't start from this state.[/yellow]")
+        return
     console.print(f"Starting {instance_id}…")
-    awsio.start_instance(region, instance_id)
+    try:
+        awsio.start_instance(region, instance_id)
+    except Exception as e:  # transient state race, etc.
+        console.print(f"[yellow]Could not start: {e}[/yellow]")
+        return
     console.print("[green]Start requested.[/green] The selected backend auto-starts "
                   "and refreshes content on boot. Use `ac status` once it's up.")
 
@@ -301,8 +319,19 @@ def cmd_start(args) -> None:
 def cmd_stop(args) -> None:
     st = state.load_state(_root())
     region, _, instance_id = _tf(st)
+    s = awsio.instance_state(region, instance_id)
+    if s in ("stopped", "stopping"):
+        console.print(f"[green]Already {s}.[/green] Compute isn't billing.")
+        return
+    if s != "running":
+        console.print(f"[yellow]Instance is '{s}' — not stopping it.[/yellow]")
+        return
     console.print(f"Stopping {instance_id}…")
-    awsio.stop_instance(region, instance_id)
+    try:
+        awsio.stop_instance(region, instance_id)
+    except Exception as e:
+        console.print(f"[yellow]Could not stop: {e}[/yellow]")
+        return
     console.print("[green]Stop requested.[/green] Compute billing stops.")
     console.print("[yellow]Note:[/yellow] this is not $0 — the Elastic IP (~$3.60/mo) "
                   "and the EBS disk (~$2.40/mo) keep billing while stopped (~$6/mo total), "
