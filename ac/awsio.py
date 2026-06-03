@@ -38,6 +38,20 @@ def terraform_outputs(project_root: Path) -> Dict[str, object]:
     return {k: v.get("value") for k, v in raw.items()}
 
 
+def terraform_destroy(project_root: Path, auto_approve: bool = False) -> int:
+    """Run `terraform destroy` in the project's terraform/ dir. Streams to the
+    console and uses the terminal for terraform's own yes/no confirmation
+    (unless auto_approve). Returns the process exit code."""
+    tf_dir = project_root / "terraform"
+    cmd = ["terraform", f"-chdir={tf_dir}", "destroy"]
+    if auto_approve:
+        cmd.append("-auto-approve")
+    try:
+        return subprocess.call(cmd)
+    except FileNotFoundError:
+        raise SystemExit("terraform not found on PATH. Install it, then retry.")
+
+
 # ---------------------------------------------------------------------------
 # Clients
 # ---------------------------------------------------------------------------

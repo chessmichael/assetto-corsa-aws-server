@@ -4,6 +4,15 @@ Spin up an **Assetto Corsa dedicated server on AWS** and drive on it from
 **Content Manager** — without shuffling mods around by hand and **without
 opening a single port on your home network**.
 
+> ### 👤 Just here to *join* a friend's server?
+> You don't need any of this. Go to **[docs/PLAYERS.md](docs/PLAYERS.md)** — it's a
+> 5-minute, no-command-line guide to getting on track.
+>
+> ### 🛠️ Hosting a server? Read on.
+> The rest of this page is the operator setup. For a deep, modify-anything
+> reference (architecture, every component, how to extend it), see
+> **[docs/TECHNICAL.md](docs/TECHNICAL.md)**.
+
 Two layers:
 
 | Layer | What it is | How often you touch it |
@@ -122,8 +131,18 @@ Ensures the referenced content is on S3 (auto-syncs anything new), renders
 ### 7. Join in Content Manager
 
 `ac deploy` prints your address (e.g. `203.0.113.10:8081`). In Content Manager →
-**Online → add server by IP** → paste it → **Join**. Quick health check from your
-browser: `http://<ip>:8081/INFO`.
+**Online**, search the server name (or **add by IP**) → **Join**. Quick health
+check from your browser: `http://<ip>:8081/INFO`.
+
+**Backup — direct connect (when it doesn't show in the lobby):** `ac deploy` and
+`ac share` also print a direct-connect link. Press **Win + R**, paste it, Enter:
+
+```
+acmanager://race/online/join?ip=<your-ip>&httpPort=8081
+```
+
+This bypasses the public lobby entirely (handy when the lobby is slow or
+rate-limited from refreshing). It's also exactly what you send friends.
 
 ---
 
@@ -133,8 +152,9 @@ browser: `http://<ip>:8081/INFO`.
 ac status        # EC2 + service state, what's listening
 ac logs          # tail the server log (via SSM)
 ac restart       # restart the active backend
-ac stop          # power off to stop paying for compute (keeps IP + disk)
+ac stop          # power off compute (keeps IP + disk; ~$6/mo idle — see Cost)
 ac start         # power back on; it auto-refreshes content and starts the server
+ac destroy       # KILL EVERYTHING — instance, IP, disk, bucket. True $0.
 ```
 
 **Added new mods?** Install them in AC, then `ac config` (they now appear) →
@@ -179,11 +199,30 @@ Both read the same config; choose per server in the wizard.
 
 ## Cost
 
-- **Stop when idle:** `ac stop` halts compute billing. The Elastic IP and disk
-  persist (a few cents/day) so your CM bookmark keeps working. `ac start` to
-  resume.
-- **Tear it all down:** `cd terraform && terraform destroy`. Removes the
-  instance, IP, and bucket. Re-`apply` later to rebuild from scratch.
+There are three states. Pick based on how soon you'll race again:
+
+| State | Command | Roughly costs | Keeps |
+|---|---|---|---|
+| **Running** | `ac start` | compute **+** ~$6/mo (see below) | everything, joinable |
+| **Stopped** | `ac stop` | **~$6/mo** | IP, disk, content — fast resume |
+| **Destroyed** | `ac destroy` | **$0** | nothing (rebuild + re-sync next time) |
+
+- **`ac stop` halts the big cost (the EC2 compute) but is *not* zero.** A stopped
+  instance still bills the **Elastic IP (~$3.60/mo)** and the **30 GB disk
+  (~$2.40/mo)** — about **$6/month** total — because AWS charges for public IPv4
+  and EBS storage even while the box is off. In return your IP and content persist
+  and `ac start` is back online in a minute.
+- **`ac destroy` is the only true-zero state.** This is the kill-everything
+  command: it wraps `terraform destroy` (which you can also run directly from
+  `terraform/`) and removes the instance, IP, disk, **and the S3 bucket with all
+  synced content**. You lose the stable IP and content, so next time you
+  `terraform apply` → `ac init` → `ac sync`/`ac deploy` again (a few minutes).
+- On a **new AWS account**, that ~$6/mo idle draws from your ~$200 free credits —
+  so "stopped" is effectively free for a long time, but `destroy` is there when
+  you want it gone completely.
+
+**Rule of thumb:** racing again this week → `ac stop`. Done for a while →
+`terraform destroy`.
 
 ---
 
@@ -238,6 +277,7 @@ terraform/   # infra: EC2, EIP, S3, SG (game ports only), SSM role, user_data.sh
 ac/          # Python CLI: cli, content, awsio, render, remote, wizard, state
 tests/       # pytest suite (offline + moto-mocked AWS)
 scripts/     # test.ps1, check-terraform.ps1, smoke-test.ps1 / .sh
+docs/        # PLAYERS.md (join guide) + TECHNICAL.md (deep reference)
 examples/    # server.example.yml
 server-config/  # notes on AssettoServer's auto-generated extra_cfg.yml
 ```

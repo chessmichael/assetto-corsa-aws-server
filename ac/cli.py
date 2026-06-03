@@ -65,6 +65,15 @@ def _print_result(title: str, status: str, out: str, err: str, max_lines: int = 
         console.print(_tail(err), markup=False, highlight=False, style="yellow")
 
 
+def _connect_url(st: Dict) -> str:
+    """The Content Manager direct-connect link — bypasses the public lobby.
+    Paste into Windows Run (Win+R) or a browser, or send it to friends."""
+    tf = st.get("terraform", {})
+    ip = tf.get("public_ip", "<ip>")
+    port = tf.get("http_port", 8081)
+    return f"acmanager://race/online/join?ip={ip}&httpPort={port}"
+
+
 # ---------------------------------------------------------------------------
 # content sync (shared by `sync` and `deploy`)
 # ---------------------------------------------------------------------------
@@ -236,6 +245,9 @@ def cmd_deploy(args) -> None:
     ip = st["terraform"].get("public_ip", "<ip>")
     console.print(f"\n[green]Done.[/green] Join in Content Manager at "
                   f"[bold]{ip}:{ports['http']}[/bold]")
+    console.print("[dim]Backup if it doesn't show in the lobby — paste into Win+R "
+                  "(or send to friends):[/dim]")
+    console.print(f"  {_connect_url(st)}")
 
 
 def cmd_share(args) -> None:
@@ -251,6 +263,9 @@ def cmd_share(args) -> None:
     console.print("  Car(s):   " + ", ".join(cars))
     console.print("[dim]They need the FULL mods (models/textures), not just the "
                   "server data files — install the exact items above.[/dim]")
+    console.print("\n[bold]Send them this to join[/bold] (direct-connect, bypasses the lobby):")
+    console.print(f"  link:     {_connect_url(st)}   (paste into Win+R or a browser)")
+    console.print(f"  password: {cfg.get('password') or '(none)'}")
 
     if not args.out:
         console.print("\nRe-run with [cyan]--out <folder>[/cyan] to copy the full "
@@ -286,9 +301,14 @@ def cmd_start(args) -> None:
 def cmd_stop(args) -> None:
     st = state.load_state(_root())
     region, _, instance_id = _tf(st)
-    console.print(f"Stopping {instance_id} (saves compute cost; EIP + disk kept)…")
+    console.print(f"Stopping {instance_id}…")
     awsio.stop_instance(region, instance_id)
-    console.print("[green]Stop requested.[/green]")
+    console.print("[green]Stop requested.[/green] Compute billing stops.")
+    console.print("[yellow]Note:[/yellow] this is not $0 — the Elastic IP (~$3.60/mo) "
+                  "and the EBS disk (~$2.40/mo) keep billing while stopped (~$6/mo total), "
+                  "so your IP + content persist and `ac start` resumes fast.")
+    console.print("[dim]For a true-zero teardown run `terraform destroy` "
+                  "(loses the IP + synced content; rebuild with apply + ac sync).[/dim]")
 
 
 def cmd_status(args) -> None:
@@ -325,6 +345,26 @@ def cmd_restart(args) -> None:
     _print_result("restart", status, out, err)
 
 
+def cmd_destroy(args) -> None:
+    """Tear down EVERYTHING — true $0. Wraps `terraform destroy`."""
+    root = _root()
+    console.print("[red bold]This permanently destroys EVERYTHING for this project:[/red bold] "
+                  "the EC2 instance, the Elastic IP, the disk, and the S3 content bucket "
+                  "(synced content included). Billing drops to $0.")
+    console.print("[dim]You'll lose the stable IP and synced content. Rebuild later with "
+                  "`terraform apply` -> `ac init` -> `ac sync`/`ac deploy`.[/dim]")
+    if not args.yes:
+        console.print("[yellow]terraform will ask you to confirm with 'yes'.[/yellow]")
+    rc = awsio.terraform_destroy(root, auto_approve=args.yes)
+    if rc != 0:
+        raise SystemExit(f"terraform destroy did not complete (exit {rc}).")
+    # The saved outputs (IP, instance id, bucket) are now stale — drop them.
+    st = state.load_state(root)
+    if st.pop("terraform", None) is not None:
+        state.save_state(st, root)
+    console.print("[green]Destroyed. This project now costs $0 on AWS.[/green]")
+
+
 # ---------------------------------------------------------------------------
 # parser
 # ---------------------------------------------------------------------------
@@ -358,6 +398,10 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("stop", help="stop the EC2 instance (save cost)").set_defaults(func=cmd_stop)
     sub.add_parser("status", help="instance + service status via SSM").set_defaults(func=cmd_status)
     sub.add_parser("restart", help="restart the active backend via SSM").set_defaults(func=cmd_restart)
+
+    sp = sub.add_parser("destroy", help="tear down ALL AWS resources (true $0)")
+    sp.add_argument("--yes", action="store_true", help="skip the confirmation prompt")
+    sp.set_defaults(func=cmd_destroy)
 
     sp = sub.add_parser("logs", help="tail server logs via SSM")
     sp.add_argument("--lines", type=int, default=200)

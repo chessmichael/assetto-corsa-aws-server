@@ -7,6 +7,7 @@ Subcommands (see ac/cli.py):
     deploy  render configs, ensure content present, restart the chosen backend
     share   produce the minimal client-side content set for friends
     start   / stop / status / logs / restart   operate the instance via SSM
+    destroy tear down ALL AWS resources for this project (true $0)
 """
 
 __version__ = "0.1.0"
