@@ -24,6 +24,11 @@ def find_project_root(start: Optional[Path] = None) -> Path:
     for d in [start, *start.parents]:
         if (d / "terraform").is_dir() or (d / "pyproject.toml").is_file():
             return d
+    # Fallback: the repo this package was installed from (editable installs put
+    # ac/ inside the project), so `ac` works from any working directory.
+    pkg_root = Path(__file__).resolve().parent.parent
+    if (pkg_root / "terraform").is_dir():
+        return pkg_root
     return start
 
 
