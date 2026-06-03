@@ -75,6 +75,22 @@ def test_validate_booking_requires_acserver(sample_cfg):
     assert not any("booking" in p.lower() for p in render.validate(sample_cfg))
 
 
+def test_practice_time_zero_renders_as_unlimited(sample_cfg):
+    # time:0 must NOT emit TIME=0 — that loops the session ~continuously and
+    # "shakes" cars. It should become a large finite minute count.
+    out = render.render_server_cfg(sample_cfg)  # sample practice time is 0
+    practice = out.split("[PRACTICE]")[1].split("\n[")[0]
+    assert "TIME=0" not in practice
+    assert f"TIME={render.UNLIMITED_MINUTES}" in practice
+
+
+def test_practice_positive_time_is_preserved(sample_cfg):
+    sample_cfg["sessions"]["practice"]["time"] = 30
+    out = render.render_server_cfg(sample_cfg)
+    practice = out.split("[PRACTICE]")[1].split("\n[")[0]
+    assert "TIME=30" in practice
+
+
 def test_content_refs(sample_cfg):
     cars, tracks = render.content_refs(sample_cfg)
     assert cars == ["car_a", "car_b"]

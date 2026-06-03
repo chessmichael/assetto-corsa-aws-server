@@ -9,6 +9,18 @@ from typing import Dict, List, Tuple
 
 DEFAULT_PORTS = {"tcp": 9600, "udp": 9600, "http": 8081}
 
+# AC has no true "unlimited" session length. TIME=0 makes a time-based session
+# (practice/qualify) end instantly and — with loop mode — loop several times a
+# second, which resets connected cars repeatedly (they appear to "shake" and
+# can't be driven). So map a 0/blank practice or qualify time to a very large
+# minute count, i.e. effectively unlimited.
+UNLIMITED_MINUTES = 9999
+
+
+def _session_minutes(minutes) -> int:
+    m = int(minutes or 0)
+    return m if m > 0 else UNLIMITED_MINUTES
+
 
 def _unique(seq: List[str]) -> List[str]:
     seen, out = set(), []
@@ -79,14 +91,14 @@ def render_server_cfg(cfg: Dict, ports: Dict[str, int] = None) -> str:
     if p.get("enabled"):
         L += ["", "[PRACTICE]"]
         _kv(L, "NAME", p.get("name", "Practice"))
-        _kv(L, "TIME", int(p.get("time", 0)))
+        _kv(L, "TIME", _session_minutes(p.get("time", 0)))
         _kv(L, "IS_OPEN", 1 if p.get("is_open", True) else 0)
 
     q = sessions.get("qualify", {})
     if q.get("enabled"):
         L += ["", "[QUALIFY]"]
         _kv(L, "NAME", q.get("name", "Qualify"))
-        _kv(L, "TIME", int(q.get("time", 15)))
+        _kv(L, "TIME", _session_minutes(q.get("time", 15)))
         _kv(L, "IS_OPEN", 1 if q.get("is_open", True) else 0)
 
     r = sessions.get("race", {})
