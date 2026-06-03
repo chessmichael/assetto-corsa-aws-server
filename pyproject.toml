@@ -10,6 +10,12 @@ dependencies = [
     "rich>=13.0",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0",
+    "moto[s3,ec2]>=5.0",
+]
+
 [project.scripts]
 ac = "ac.cli:main"
 
@@ -19,3 +25,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["ac"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

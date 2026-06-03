@@ -201,11 +201,43 @@ Both read the same config; choose per server in the wizard.
 
 ---
 
+## Testing
+
+Three tiers, cheapest first:
+
+```powershell
+# 1. Offline + mocked-AWS unit tests (free, fast — no AWS account, no game).
+#    Covers the config renderer, content/hash/manifest logic, S3 sync,
+#    EC2 start/stop, and the SSM layer (mocked with moto + a fake client).
+pwsh ./scripts/test.ps1
+
+# 2. Terraform static checks (free — fmt + validate, no AWS touched).
+pwsh ./scripts/check-terraform.ps1
+
+# 3. Real deploy smoke test (~a few cents, needs AWS creds; no game needed).
+#    apply -> verify the box boots, registers with SSM, and installs the
+#    server -> ALWAYS destroys afterward.
+pwsh ./scripts/smoke-test.ps1
+```
+
+(Bash equivalents: `scripts/smoke-test.sh`. Tiers 1–2 need real Python/Terraform
+installed; the Windows Store Python stub won't work.)
+
+What each tier can and can't prove:
+- **Tiers 1–2** catch the vast majority of logic/config regressions.
+- **Tier 3** proves the infrastructure really boots and self-installs. It checks
+  *infra health*, not a live race — a running `/INFO` endpoint needs `ac deploy`
+  with real content, which is the manual step.
+- **Actually driving on it** (joining from Content Manager) is the final manual
+  check only you can do.
+
 ## Layout
 
 ```
 terraform/   # infra: EC2, EIP, S3, SG (game ports only), SSM role, user_data.sh
 ac/          # Python CLI: cli, content, awsio, render, remote, wizard, state
+tests/       # pytest suite (offline + moto-mocked AWS)
+scripts/     # test.ps1, check-terraform.ps1, smoke-test.ps1 / .sh
 examples/    # server.example.yml
 server-config/  # notes on AssettoServer's auto-generated extra_cfg.yml
 ```

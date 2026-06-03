@@ -1,0 +1,4 @@
+# Test/dev dependencies (the runtime deps live in requirements.txt / pyproject).
+# Install with:  py -m pip install -e ".[test]"   (or:  py -m pip install -r requirements-dev.txt)
+pytest>=7.0
+moto[s3,ec2]>=5.0

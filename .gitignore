@@ -18,6 +18,7 @@ venv/
 *.egg-info/
 build/
 dist/
+.pytest_cache/
 
 # Content staging (never commit copyrighted car/track files)
 content-cache/
