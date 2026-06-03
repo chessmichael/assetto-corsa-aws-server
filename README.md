@@ -290,3 +290,8 @@ server-config/  # notes on AssettoServer's auto-generated extra_cfg.yml
   races.
 - Advanced AssettoServer features (AI traffic, dynamic weather) are left to its
   auto-generated `extra_cfg.yml` for now (see `server-config/`).
+
+## License
+
+MIT — see [LICENSE](LICENSE). Assetto Corsa, its content, and AssettoServer are
+the property of their respective owners; this project just orchestrates a server.
