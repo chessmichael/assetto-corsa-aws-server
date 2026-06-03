@@ -1,0 +1,6 @@
+# Shell scripts must keep LF endings — user_data.sh runs on the Linux server,
+# and CRLF would break bash (bad heredocs, stray \r in values).
+*.sh text eol=lf
+
+# Normalize everything else by default; CRLF is fine for these on Windows.
+* text=auto
