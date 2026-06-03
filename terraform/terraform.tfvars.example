@@ -1,0 +1,17 @@
+# Copy to terraform.tfvars and adjust. All values are optional (sensible
+# defaults are defined in variables.tf).
+
+# AWS region to deploy into.
+region = "us-east-1"
+
+# Instance size. t3.medium is plenty for a private server.
+# Bump to t3.large / c-family if you run lots of AI traffic.
+instance_type = "t3.medium"
+
+# Game-port firewall. Default below lets anyone join by IP (typical for playing
+# with friends). To restrict to specific players, list their public IPs:
+# allowed_game_cidrs = ["203.0.113.10/32", "198.51.100.5/32"]
+allowed_game_cidrs = ["0.0.0.0/0"]
+
+# Pin an AssettoServer release, or leave "latest" to grab the newest at boot.
+# assetto_server_version = "v0.0.53"

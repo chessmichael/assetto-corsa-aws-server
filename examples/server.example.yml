@@ -1,0 +1,46 @@
+# Example server.yml — `ac config` writes one of these for you, but you can also
+# hand-edit it. car/track ids are the folder names under
+# ...\assettocorsa\content\cars  and  ...\content\tracks.
+
+name: "Friday Night Practice"
+backend: assettoserver      # assettoserver | acserver
+password: ""                # blank = public
+admin_password: "change-me" # use /admin <pass> in chat
+
+track:
+  id: ks_nordschleife
+  layout: endurance         # "" if the track has no separate layouts
+
+cars:
+  - id: ks_porsche_911_gt3_r_2016
+    count: 12               # grid slots for this car
+    skins: []               # optional explicit skins; [] = server default
+  - id: ks_ferrari_488_gt3
+    count: 12
+
+sessions:
+  practice:
+    enabled: true
+    name: Practice
+    time: 0                 # minutes, 0 = unlimited
+    is_open: true           # join anytime ("open practice")
+  qualify:
+    enabled: false
+    name: Qualify
+    time: 15
+    is_open: true
+  race:
+    enabled: false
+    name: Race
+    laps: 10
+    time: 0                 # 0 = use laps; >0 = timed race
+    wait_time: 60           # seconds on the grid before green
+    is_open: true
+  booking:                  # vanilla acServer only
+    enabled: false
+
+# Optional tuning (sensible defaults applied if omitted)
+# fuel_rate: 100
+# tyre_wear: 100
+# damage: 0
+# weather: { graphics: "3_clear", ambient: 18, road_offset: 6 }

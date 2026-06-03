@@ -1,0 +1,29 @@
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+crash.log
+
+# Local control-tool state (contains your AC path, bucket, instance id)
+.ac/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Content staging (never commit copyrighted car/track files)
+content-cache/
+*.acd
+*.kn5
+
+# OS
+Thumbs.db
+.DS_Store
