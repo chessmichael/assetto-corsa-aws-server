@@ -215,6 +215,16 @@ def cmd_deploy(args) -> None:
             console.print(f"[red]• {p}[/red]")
         raise SystemExit("Fix the config problems above, then re-run `ac deploy`.")
 
+    # Multi-layout tracks need a layout chosen, or the track loads wrong (cars
+    # spawn badly / "shake"). Catch the common hand-edit mistake before deploy.
+    track = cfg.get("track", {})
+    if track.get("id") and not track.get("layout"):
+        layouts = content.list_tracks(install).get(track["id"], {}).get("layouts") or []
+        if layouts:
+            console.print(f"[yellow]Warning:[/yellow] track '{track['id']}' has multiple "
+                          f"layouts ({', '.join(layouts)}) but none is selected. Set "
+                          f"track.layout to one of them or the track may not load right.")
+
     # 1. Make sure this server's content is on S3 (auto-sync new/changed mods).
     console.print("[bold]1/3 Ensuring content is synced…[/bold]")
     cars, track_refs = render.content_refs(cfg)
