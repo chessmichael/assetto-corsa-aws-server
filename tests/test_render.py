@@ -91,6 +91,41 @@ def test_practice_positive_time_is_preserved(sample_cfg):
     assert "TIME=30" in practice
 
 
+def test_rules_damage_warmers_wear(sample_cfg):
+    sample_cfg["rules"] = {"damage": 0, "tyre_blankets": True, "tyre_wear": 50,
+                           "fuel_rate": 75}
+    out = render.render_server_cfg(sample_cfg)
+    assert "DAMAGE_MULTIPLIER=0" in out
+    assert "TYRE_BLANKETS_ALLOWED=1" in out
+    assert "TYRE_WEAR_RATE=50" in out
+    assert "FUEL_RATE=75" in out
+
+
+def test_rules_assist_mapping(sample_cfg):
+    sample_cfg["rules"] = {"abs": "off", "traction_control": "on"}
+    out = render.render_server_cfg(sample_cfg)
+    assert "ABS_ALLOWED=0" in out
+    assert "TC_ALLOWED=2" in out
+
+
+def test_rules_legal_tyres(sample_cfg):
+    sample_cfg["rules"] = {"legal_tyres": ["SM", "SH"]}
+    assert "LEGAL_TYRES=SM;SH" in render.render_server_cfg(sample_cfg)
+
+
+def test_rules_defaults_when_absent(sample_cfg):
+    out = render.render_server_cfg(sample_cfg)  # no rules block
+    assert "DAMAGE_MULTIPLIER=100" in out
+    assert "TYRE_BLANKETS_ALLOWED=0" in out
+    assert "ABS_ALLOWED=1" in out
+    assert "LEGAL_TYRES" not in out  # omitted unless restricted
+
+
+def test_legacy_toplevel_keys_still_work(sample_cfg):
+    sample_cfg["damage"] = 50  # old-style top-level key
+    assert "DAMAGE_MULTIPLIER=50" in render.render_server_cfg(sample_cfg)
+
+
 def test_content_refs(sample_cfg):
     cars, tracks = render.content_refs(sample_cfg)
     assert cars == ["car_a", "car_b"]

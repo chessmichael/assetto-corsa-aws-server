@@ -14,7 +14,10 @@ track:
 cars:
   - id: ks_porsche_911_gt3_r_2016
     count: 12               # grid slots for this car
-    skins: []               # optional explicit skins; [] = server default
+    # skins (= car colors/liveries). [] lets each player pick their own color.
+    # To assign specific liveries, list skin folder names — run
+    #   ac skins ks_porsche_911_gt3_r_2016   to see what's available.
+    skins: []
   - id: ks_ferrari_488_gt3
     count: 12
 
@@ -39,8 +42,19 @@ sessions:
   booking:                  # vanilla acServer only
     enabled: false
 
-# Optional tuning (sensible defaults applied if omitted)
-# fuel_rate: 100
-# tyre_wear: 100
-# damage: 0
+# Race rules / realism — all optional; the defaults shown apply if omitted.
+rules:
+  damage: 100              # DAMAGE_MULTIPLIER 0-100  (0 = damage OFF)
+  fuel_rate: 100           # fuel / "gas" consumption %  (50 = half, 0 = none)
+  tyre_wear: 100           # tyre wear %  (0 = no wear)
+  tyre_blankets: false     # tyre warmers — true = start on hot tyres
+  legal_tyres: []          # allowed compounds, e.g. ["SM","SH"]; [] = all allowed
+  tyres_out: 2             # cut penalty after this many tyres off track (-1 = off)
+  abs: factory             # off | factory (as car allows) | on (forced)
+  traction_control: factory  # off | factory | on
+  stability_control: 0     # stability-assist % allowed (0 = off)
+  autoclutch: true         # allow auto-clutch
+  force_virtual_mirror: true
+
+# Optional weather (sensible default applied if omitted)
 # weather: { graphics: "3_clear", ambient: 18, road_offset: 6 }

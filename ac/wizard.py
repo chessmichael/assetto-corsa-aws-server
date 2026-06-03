@@ -151,4 +151,21 @@ def run_wizard(install: Path, existing: Optional[Dict] = None) -> Optional[Dict]
         sessions["booking"] = {"enabled": False}
 
     cfg["sessions"] = sessions
+
+    # --- race rules (optional) ---
+    if _yesno("Set race rules (damage / fuel / tyres / assists)? (else defaults)", False):
+        r = cfg.get("rules", {})
+        r["damage"] = _int("  damage % (0 = off, 100 = full)", 100)
+        r["fuel_rate"] = _int("  fuel/gas use % (100 = normal)", 100)
+        r["tyre_wear"] = _int("  tyre wear % (100 = normal)", 100)
+        r["tyre_blankets"] = _yesno("  tyre warmers (start on hot tyres)?", False)
+        abs_c = questionary.select(
+            "  ABS allowed?", choices=["factory", "off", "on"], default="factory").ask()
+        r["abs"] = abs_c or "factory"
+        tc_c = questionary.select(
+            "  Traction control allowed?", choices=["factory", "off", "on"],
+            default="factory").ask()
+        r["traction_control"] = tc_c or "factory"
+        cfg["rules"] = r
+
     return cfg

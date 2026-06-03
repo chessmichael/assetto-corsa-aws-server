@@ -195,8 +195,20 @@ sessions:
   qualify:  { enabled, name, time, is_open }
   race:     { enabled, name, laps, time(0=use laps), wait_time(sec), is_open }
   booking:  { enabled, name, time }    # acServer only
-# optional tuning: fuel_rate, tyre_wear, damage, weather{graphics,ambient,road_offset}
+rules:                        # optional race rules/realism; defaults if omitted
+  damage: int                 # 0-100, 0 = damage off
+  fuel_rate: int              # "gas" use %        tyre_wear: int   # %
+  tyre_blankets: bool         # warmers            legal_tyres: [str]  # [] = all
+  tyres_out: int              # cut penalty after N tyres off (-1 = off)
+  abs|traction_control: off|factory|on            stability_control: int  # %
+  autoclutch|force_virtual_mirror: bool
+# legacy top-level fuel_rate/tyre_wear/damage keys still honored.
+# per-car `skins: [names]` assigns liveries (colors); [] = players pick. Use
+# `ac skins <car_id>` to list available skin names. weather: {graphics, ambient, road_offset}
 ```
+Rules render into `server_cfg.ini` ([SERVER]): DAMAGE_MULTIPLIER, FUEL_RATE,
+TYRE_WEAR_RATE, TYRE_BLANKETS_ALLOWED, LEGAL_TYRES, ALLOWED_TYRES_OUT,
+ABS_ALLOWED/TC_ALLOWED (off=0/factory=1/on=2 via `render._assist`), etc.
 Sessions run in order and loop. **If practice `time: 0` (unlimited) it never
 advances to race** — give it a finite time for a practice→race cycle.
 
@@ -363,6 +375,6 @@ free credits. See README "Cost" for the operator-facing summary.
   `server/.backend`, `manifest.json`, `bin/acServer` (optional).
 - **Health check**: `curl http://<ip>:8081/INFO` → server JSON.
 - **Commands**: `ac init | sync [--all|--full] | config | deploy | share [--out] |
-  start | stop | status | logs [--lines N] | restart | destroy [--yes]`.
+  skins <car> | start | stop | status | logs [--lines N] | restart | destroy [--yes]`.
 - **Direct-connect link**: `acmanager://race/online/join?ip=<ip>&httpPort=8081`
   (Win+R or browser; bypasses the lobby). Printed by `ac deploy`/`ac share`.

@@ -61,6 +61,11 @@ def test_track_server_files_full_includes_everything(ac_install):
     assert "ai/fast_lane.ai" in rel
 
 
+def test_list_skins(ac_install):
+    assert content.list_skins(ac_install, "car_a") == ["red"]
+    assert content.list_skins(ac_install, "car_b") == []  # no skins folder
+
+
 def test_hash_is_deterministic_and_change_sensitive(ac_install):
     base = ac_install / "content" / "cars" / "car_a"
     files = content.car_server_files(ac_install, "car_a")

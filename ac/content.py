@@ -128,6 +128,16 @@ def list_cars(install: Path) -> Dict[str, Dict]:
     return cars
 
 
+def list_skins(install: Path, car_id: str) -> List[str]:
+    """Available skin (livery / color) folder names for a car. These are the
+    values you put in a car's `skins:` list in server.yml. Empty `skins:` lets
+    each player pick their own color when they join."""
+    base = install / "content" / "cars" / car_id / "skins"
+    if not base.is_dir():
+        return []
+    return [d.name for d in sorted(base.iterdir()) if d.is_dir()]
+
+
 def list_tracks(install: Path) -> Dict[str, Dict]:
     tracks: Dict[str, Dict] = {}
     base = install / "content" / "tracks"

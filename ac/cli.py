@@ -299,6 +299,23 @@ def cmd_share(args) -> None:
     console.print(f"[green]Copied {copied} full content folder(s) to {out}[/green]")
 
 
+def cmd_skins(args) -> None:
+    root = _root()
+    st = state.load_state(root)
+    install = state.ac_install(st)
+    skins = content.list_skins(install, args.car)
+    if not skins:
+        console.print(f"No skins found for '{args.car}'. Check the car id "
+                      "(e.g. ks_mazda_mx5_cup).")
+        return
+    console.print(f"[bold]{len(skins)} skins (colors/liveries) for {args.car}:[/bold]")
+    for s in skins:
+        console.print(f"  {s}")
+    console.print("[dim]Put any of these in a car's `skins:` list in server.yml to "
+                  "assign liveries; leave skins empty to let each player pick their "
+                  "own color.[/dim]")
+
+
 def cmd_start(args) -> None:
     st = state.load_state(_root())
     region, _, instance_id = _tf(st)
@@ -432,6 +449,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--file", default="server.yml")
     sp.add_argument("--out", help="copy full content folders into this directory")
     sp.set_defaults(func=cmd_share)
+
+    sp = sub.add_parser("skins", help="list a car's skins (colors) for cars[].skins")
+    sp.add_argument("car", help="car id, e.g. ks_mazda_mx5_cup")
+    sp.set_defaults(func=cmd_skins)
 
     sub.add_parser("start", help="start the EC2 instance").set_defaults(func=cmd_start)
     sub.add_parser("stop", help="stop the EC2 instance (save cost)").set_defaults(func=cmd_stop)

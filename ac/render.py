@@ -22,6 +22,17 @@ def _session_minutes(minutes) -> int:
     return m if m > 0 else UNLIMITED_MINUTES
 
 
+def _assist(val) -> int:
+    """ABS/TC allowance for server_cfg: 0 = not allowed, 1 = factory (as the car
+    allows), 2 = forced on. Accepts those ints, a bool, or off/factory/on."""
+    if isinstance(val, bool):
+        return 1 if val else 0
+    if isinstance(val, int):
+        return val
+    return {"off": 0, "no": 0, "factory": 1, "default": 1,
+            "on": 2, "forced": 2, "yes": 2}.get(str(val).strip().lower(), 1)
+
+
 def _unique(seq: List[str]) -> List[str]:
     seen, out = set(), []
     for x in seq:
@@ -72,16 +83,29 @@ def render_server_cfg(cfg: Dict, ports: Dict[str, int] = None) -> str:
     _kv(L, "VOTING_QUORUM", 80)
     _kv(L, "VOTE_DURATION", 20)
     _kv(L, "BLACKLIST_MODE", 1)
-    _kv(L, "FUEL_RATE", cfg.get("fuel_rate", 100))
-    _kv(L, "DAMAGE_MULTIPLIER", cfg.get("damage", 0))
-    _kv(L, "TYRE_WEAR_RATE", cfg.get("tyre_wear", 100))
-    _kv(L, "ALLOWED_TYRES_OUT", 2)
-    _kv(L, "ABS_ALLOWED", 1)
-    _kv(L, "TC_ALLOWED", 1)
-    _kv(L, "STABILITY_ALLOWED", 0)
-    _kv(L, "AUTOCLUTCH_ALLOWED", 1)
-    _kv(L, "TYRE_BLANKETS_ALLOWED", 0)
-    _kv(L, "FORCE_VIRTUAL_MIRROR", 1)
+
+    # --- race rules / realism (the optional `rules:` block; legacy top-level
+    #     fuel_rate/damage/tyre_wear keys are still honored for back-compat) ---
+    rules = cfg.get("rules") or {}
+
+    def rule(key, default):
+        if key in rules:
+            return rules[key]
+        return cfg.get(key, default)
+
+    _kv(L, "FUEL_RATE", int(rule("fuel_rate", 100)))                 # "gas" use %
+    _kv(L, "DAMAGE_MULTIPLIER", int(rule("damage", 100)))           # 0 = damage off
+    _kv(L, "TYRE_WEAR_RATE", int(rule("tyre_wear", 100)))
+    _kv(L, "ALLOWED_TYRES_OUT", int(rule("tyres_out", 2)))
+    _kv(L, "ABS_ALLOWED", _assist(rule("abs", "factory")))
+    _kv(L, "TC_ALLOWED", _assist(rule("traction_control", "factory")))
+    _kv(L, "STABILITY_ALLOWED", int(rule("stability_control", 0)))
+    _kv(L, "AUTOCLUTCH_ALLOWED", 1 if rule("autoclutch", True) else 0)
+    _kv(L, "TYRE_BLANKETS_ALLOWED", 1 if rule("tyre_blankets", False) else 0)  # warmers
+    _kv(L, "FORCE_VIRTUAL_MIRROR", 1 if rule("force_virtual_mirror", True) else 0)
+    legal = rule("legal_tyres", [])
+    if legal:
+        _kv(L, "LEGAL_TYRES", ";".join(str(t) for t in legal))      # allowed compounds
     _kv(L, "RESULT_SCREEN_TIME", 60)
     _kv(L, "RACE_GAS_PENALTY_DISABLED", 0)
     _kv(L, "MAX_BALLAST_KG", 150)
