@@ -10,6 +10,11 @@ crash.log
 # Local control-tool state (contains your AC path, bucket, instance id)
 .ac/
 
+# Your live server config(s) — may contain admin passwords. Use
+# examples/server.example.yml as the shareable template.
+server.yml
+server.*.yml
+
 # Python
 __pycache__/
 *.py[cod]

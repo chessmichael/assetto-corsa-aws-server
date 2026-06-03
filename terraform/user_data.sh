@@ -87,9 +87,9 @@ cat > /usr/local/bin/ac-presync <<'EOF'
 set -a; . /etc/ac.env; set +a
 # extra_cfg.yml is auto-generated and owned by AssettoServer; exclude it so the
 # --delete sync never removes the server's own copy.
-aws s3 sync "s3://$AC_BUCKET/server/cfg"     /opt/ac/server/cfg     --delete --exclude "extra_cfg.yml" --region "$AC_REGION" || true
-aws s3 sync "s3://$AC_BUCKET/server/content" /opt/ac/server/content --delete --region "$AC_REGION" || true
-aws s3 cp   "s3://$AC_BUCKET/server/.backend" /opt/ac/server/.backend --region "$AC_REGION" || true
+aws s3 sync "s3://$AC_BUCKET/server/cfg"     /opt/ac/server/cfg     --delete --exclude "extra_cfg.yml" --only-show-errors --region "$AC_REGION" || true
+aws s3 sync "s3://$AC_BUCKET/server/content" /opt/ac/server/content --delete --only-show-errors --region "$AC_REGION" || true
+aws s3 cp   "s3://$AC_BUCKET/server/.backend" /opt/ac/server/.backend --only-show-errors --region "$AC_REGION" || true
 EOF
 chmod +x /usr/local/bin/ac-presync
 

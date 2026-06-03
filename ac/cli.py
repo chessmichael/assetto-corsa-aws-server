@@ -49,13 +49,20 @@ def _tf(st: Dict) -> Tuple[str, str, str]:
             state.require(st, "instance_id"))
 
 
-def _print_result(title: str, status: str, out: str, err: str) -> None:
+def _print_result(title: str, status: str, out: str, err: str, max_lines: int = 40) -> None:
     color = "green" if status == "Success" else "red"
     console.print(f"[{color}]{title}: {status}[/{color}]")
+
+    def _tail(s: str) -> str:
+        lines = s.strip().splitlines()
+        return "\n".join(lines[-max_lines:])
+
+    # markup=False/highlight=False so brackets or odd chars in command output
+    # are never interpreted by rich.
     if out.strip():
-        console.print(out.strip())
+        console.print(_tail(out), markup=False, highlight=False)
     if err.strip():
-        console.print(f"[yellow]{err.strip()}[/yellow]")
+        console.print(_tail(err), markup=False, highlight=False, style="yellow")
 
 
 # ---------------------------------------------------------------------------
@@ -221,7 +228,11 @@ def cmd_deploy(args) -> None:
         console.print("[yellow]Instance isn't reporting to SSM yet. If you just ran "
                       "apply or `ac start`, give it ~1 minute and retry.[/yellow]")
     status, out, err = remote.update(region, instance_id)
-    _print_result("deploy", status, out, err)
+    if status == "Success":
+        console.print("[green]3/3 deploy: Success[/green]")
+    else:
+        _print_result("deploy", status, out, err)
+        raise SystemExit("Deploy command failed on the server. Check `ac logs`.")
     ip = st["terraform"].get("public_ip", "<ip>")
     console.print(f"\n[green]Done.[/green] Join in Content Manager at "
                   f"[bold]{ip}:{ports['http']}[/bold]")
@@ -357,6 +368,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv=None) -> None:
+    # Windows consoles default to cp1252, which can't encode characters that
+    # show up in server log output (e.g. arrows). Force UTF-8 so printing never
+    # crashes the tool.
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     args = build_parser().parse_args(argv)
     try:
         args.func(args)
