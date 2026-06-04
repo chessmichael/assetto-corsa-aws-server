@@ -115,9 +115,12 @@ ac sync --all      # whole library's server-side files (recommended once)
 ac config
 ```
 
-Pick **backend**, **track + layout**, **cars + grid slots**, and **sessions**
-(practice / qualify / race, plus booking on vanilla). It only offers content you
-actually have. Writes `server.yml` (commit it, edit it, reuse it).
+A **menu editor** — pick only the section you want to change (track, cars,
+sessions, rules, handicaps, name/passwords); everything else is left as-is, so
+small tweaks don't mean re-answering everything. Editing cars lets you
+keep/add/remove rather than redo them. It only offers content you actually have,
+and writes `server.yml` (commit it, edit it, reuse it). You can also just
+hand-edit `server.yml` directly.
 
 ### 6. Deploy
 

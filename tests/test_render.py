@@ -115,8 +115,9 @@ def test_rules_legal_tyres(sample_cfg):
 
 def test_rules_defaults_when_absent(sample_cfg):
     out = render.render_server_cfg(sample_cfg)  # no rules block
-    assert "DAMAGE_MULTIPLIER=100" in out
-    assert "TYRE_BLANKETS_ALLOWED=0" in out
+    assert "DAMAGE_MULTIPLIER=0" in out         # forgiving defaults: 0
+    assert "FUEL_RATE=0" in out
+    assert "TYRE_WEAR_RATE=0" in out
     assert "ABS_ALLOWED=1" in out
     assert "LEGAL_TYRES" not in out  # omitted unless restricted
 

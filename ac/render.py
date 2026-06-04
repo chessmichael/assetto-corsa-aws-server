@@ -94,9 +94,9 @@ def render_server_cfg(cfg: Dict, ports: Dict[str, int] = None) -> str:
             return rules[key]
         return cfg.get(key, default)
 
-    _kv(L, "FUEL_RATE", int(rule("fuel_rate", 100)))                 # "gas" use %
-    _kv(L, "DAMAGE_MULTIPLIER", int(rule("damage", 100)))           # 0 = damage off
-    _kv(L, "TYRE_WEAR_RATE", int(rule("tyre_wear", 100)))
+    _kv(L, "FUEL_RATE", int(rule("fuel_rate", 0)))                  # "gas" use % (default off)
+    _kv(L, "DAMAGE_MULTIPLIER", int(rule("damage", 0)))            # default 0 = damage off
+    _kv(L, "TYRE_WEAR_RATE", int(rule("tyre_wear", 0)))            # default 0 = no wear
     _kv(L, "ALLOWED_TYRES_OUT", int(rule("tyres_out", 2)))
     _kv(L, "ABS_ALLOWED", _assist(rule("abs", "factory")))
     _kv(L, "TC_ALLOWED", _assist(rule("traction_control", "factory")))

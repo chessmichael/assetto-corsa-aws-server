@@ -48,11 +48,12 @@ sessions:
   booking:                  # vanilla acServer only
     enabled: false
 
-# Race rules / realism — all optional; the defaults shown apply if omitted.
+# Race rules / realism — all optional; the values shown are the DEFAULTS (so a
+# server with no rules block is fully casual: no damage, fuel, or tyre wear).
 rules:
-  damage: 100              # DAMAGE_MULTIPLIER 0-100  (0 = damage OFF)
-  fuel_rate: 100           # fuel / "gas" consumption %  (50 = half, 0 = none)
-  tyre_wear: 100           # tyre wear %  (0 = no wear)
+  damage: 0                # 0 = damage OFF (default); up to 100 = full
+  fuel_rate: 0             # fuel / "gas" use %  (0 = none, default; 100 = realistic)
+  tyre_wear: 0             # tyre wear %  (0 = none, default; 100 = realistic)
   tyre_blankets: false     # tyre warmers — true = start on hot tyres
   legal_tyres: []          # allowed compounds, e.g. ["SM","SH"]; [] = all allowed
   tyres_out: 2             # cut penalty after this many tyres off track (-1 = off)
