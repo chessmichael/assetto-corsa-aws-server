@@ -47,7 +47,8 @@ def _kv(lines: List[str], key: str, val) -> None:
 
 
 def total_slots(cfg: Dict) -> int:
-    return sum(int(c.get("count", 1)) for c in cfg.get("cars", []))
+    cars = sum(int(c.get("count", 1)) for c in cfg.get("cars", []))
+    return cars + len(cfg.get("handicaps") or [])
 
 
 def car_ids(cfg: Dict) -> List[str]:
@@ -162,26 +163,42 @@ def render_server_cfg(cfg: Dict, ports: Dict[str, int] = None) -> str:
     return "\n".join(L) + "\n"
 
 
+def _car_entry(L: List[str], idx: int, model: str, skin: str = "", guid: str = "",
+               driver: str = "", ballast: int = 0, restrictor: int = 0) -> None:
+    L += [f"[CAR_{idx}]"]
+    _kv(L, "MODEL", model)
+    _kv(L, "SKIN", skin)
+    _kv(L, "SPECTATOR_MODE", 0)
+    _kv(L, "DRIVERNAME", driver)
+    _kv(L, "TEAM", "")
+    _kv(L, "GUID", guid)          # set = slot reserved for that Steam ID
+    _kv(L, "BALLAST", ballast)    # kg of added weight
+    _kv(L, "RESTRICTOR", restrictor)  # 0-100 intake restrictor = less power
+    L.append("")
+
+
 def render_entry_list(cfg: Dict) -> str:
+    """Open grid slots, then one reserved (GUID-pinned) slot per handicap. A
+    handicap slot carries a restrictor/ballast, so that player silently runs
+    with less power than everyone else."""
     L: List[str] = []
+    cars = cfg.get("cars", [])
+    default_car = cars[0]["id"] if cars else ""
     idx = 0
-    for car in cfg.get("cars", []):
+    for car in cars:
         cid = car["id"]
         skins = car.get("skins") or [""]
-        count = int(car.get("count", 1))
-        for n in range(count):
-            skin = skins[n % len(skins)]
-            L += [f"[CAR_{idx}]"]
-            _kv(L, "MODEL", cid)
-            _kv(L, "SKIN", skin)
-            _kv(L, "SPECTATOR_MODE", 0)
-            _kv(L, "DRIVERNAME", "")
-            _kv(L, "TEAM", "")
-            _kv(L, "GUID", "")
-            _kv(L, "BALLAST", 0)
-            _kv(L, "RESTRICTOR", 0)
-            L.append("")
+        for n in range(int(car.get("count", 1))):
+            _car_entry(L, idx, cid, skin=skins[n % len(skins)])
             idx += 1
+    for h in cfg.get("handicaps") or []:
+        _car_entry(L, idx,
+                   model=h.get("car") or default_car,
+                   guid=str(h.get("guid", "")),
+                   driver=h.get("name", ""),
+                   ballast=int(h.get("ballast", 0)),
+                   restrictor=int(h.get("restrictor", 0)))
+        idx += 1
     return "\n".join(L) + "\n"
 
 

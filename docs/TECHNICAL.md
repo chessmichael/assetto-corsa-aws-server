@@ -192,6 +192,9 @@ track: { id, layout, latitude?, longitude?, timezone? }  # layout "" if none;
   # crash AssettoServer with "No track params found" (not in its location DB).
 cars:                         # the grid; one player slot per count
   - { id: str, count: int, skins: [str] }   # skins optional; cycled across slots
+handicaps:                    # optional; appends one reserved, restricted slot each
+  - { guid: str, restrictor: int(0-100), ballast: int, car: str?, name: str? }
+    # GUID-pinned slot with an intake restrictor (less power) — friendly BoP / prank
 sessions:
   practice: { enabled, name, time(min, 0=unlimited), is_open }
   qualify:  { enabled, name, time, is_open }
@@ -382,6 +385,7 @@ free credits. See README "Cost" for the operator-facing summary.
   `server/.backend`, `manifest.json`, `bin/acServer` (optional).
 - **Health check**: `curl http://<ip>:8081/INFO` → server JSON.
 - **Commands**: `ac init | sync [--all|--full] | config | deploy | share [--out] |
-  skins <car> | start | stop | status | logs [--lines N] | restart | destroy [--yes]`.
+  skins <car> | players | start | stop | status | logs [--lines N] | restart |
+  destroy [--yes]`.
 - **Direct-connect link**: `acmanager://race/online/join?ip=<ip>&httpPort=8081`
   (Win+R or browser; bypasses the lobby). Printed by `ac deploy`/`ac share`.

@@ -402,6 +402,25 @@ def cmd_status(args) -> None:
     _print_result("status", status, out, err)
 
 
+def cmd_players(args) -> None:
+    st = state.load_state(_root())
+    region, _, instance_id = _tf(st)
+    s, o, e = remote.run(region, instance_id, [
+        "journalctl -u assettoserver --no-pager | "
+        "grep -aiE 'connect|7656119[0-9]{10}' | tail -40"
+    ])
+    if s != "Success":
+        _print_result("players", s, o, e)
+        return
+    if not o.strip():
+        console.print("No connections in the log yet. Have the person join once, then "
+                      "run `ac players` again.")
+        return
+    console.print("[bold]Recent connections (the 17-digit number is their Steam ID):[/bold]")
+    console.print(o.strip(), markup=False, highlight=False)
+    console.print("[dim]Use a Steam ID as the `guid` in a handicaps entry in server.yml.[/dim]")
+
+
 def cmd_logs(args) -> None:
     root = _root()
     st = state.load_state(root)
@@ -477,6 +496,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("start", help="start the EC2 instance").set_defaults(func=cmd_start)
     sub.add_parser("stop", help="stop the EC2 instance (save cost)").set_defaults(func=cmd_stop)
     sub.add_parser("status", help="instance + service status via SSM").set_defaults(func=cmd_status)
+    sub.add_parser("players", help="recently connected players + Steam IDs (for handicaps)").set_defaults(func=cmd_players)
     sub.add_parser("restart", help="restart the active backend via SSM").set_defaults(func=cmd_restart)
 
     sp = sub.add_parser("destroy", help="tear down ALL AWS resources (true $0)")

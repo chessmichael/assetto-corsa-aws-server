@@ -126,6 +126,30 @@ def test_legacy_toplevel_keys_still_work(sample_cfg):
     assert "DAMAGE_MULTIPLIER=50" in render.render_server_cfg(sample_cfg)
 
 
+def test_handicap_reserved_slot(sample_cfg):
+    sample_cfg["handicaps"] = [
+        {"guid": "76561198000000001", "restrictor": 15, "name": "Dave"}]
+    out = render.render_entry_list(sample_cfg)
+    assert out.count("[CAR_") == 4          # 3 open (2+1) + 1 reserved
+    assert "GUID=76561198000000001" in out
+    assert "RESTRICTOR=15" in out
+    assert "DRIVERNAME=Dave" in out
+    reserved = out.split("[CAR_3]")[1]      # the reserved slot
+    assert "MODEL=car_a" in reserved        # defaults to the first car
+
+
+def test_handicap_counts_toward_max_clients(sample_cfg):
+    sample_cfg["handicaps"] = [{"guid": "76561198000000001", "restrictor": 10}]
+    assert "MAX_CLIENTS=4" in render.render_server_cfg(sample_cfg)  # 3 + 1
+
+
+def test_no_handicaps_leaves_slots_open(sample_cfg):
+    out = render.render_entry_list(sample_cfg)
+    assert out.count("[CAR_") == 3
+    assert "GUID=\n" in out or "GUID=" in out  # open slots have empty GUID
+    assert "RESTRICTOR=0" in out
+
+
 def test_render_track_params():
     out = render.render_track_params("sometrack", 39.5, -122.3, "Etc/GMT+8")
     assert "[sometrack]" in out

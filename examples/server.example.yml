@@ -62,5 +62,16 @@ rules:
   autoclutch: true         # allow auto-clutch
   force_virtual_mirror: true
 
+# Per-player handicaps — pin a reserved slot to someone's Steam ID and quietly
+# give them an intake restrictor (less power) and/or ballast (weight). A friendly
+# "balance of performance"… or a prank. Get a Steam ID via `ac players` (after
+# they've joined once) or from steamid.io.
+# handicaps:
+#   - guid: "76561198000000000"   # target's 17-digit Steam ID
+#     restrictor: 12              # 0-100 intake restrictor (less HP); ~10-15 is subtle
+#     ballast: 0                  # optional kg of added weight
+#     car: ks_porsche_911_gt3_r_2016  # optional; defaults to the first car above
+#     name: "Dave"                # optional label
+
 # Optional weather (sensible default applied if omitted)
 # weather: { graphics: "3_clear", ambient: 18, road_offset: 6 }
